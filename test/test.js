@@ -1,11 +1,13 @@
 'use strict';
 const request = require('supertest');
+const assert = require('assert');
 const app = require('../app');
 const passportStub = require('passport-stub');
 const User = require('../models/user');
 const Candidate = require('../models/candidate');
 const Schedule = require('../models/schedule');
 const Availability = require('../models/availability');
+const Comment = require('../models/comment');
 
 describe('/login', () => {
   beforeAll(() => {
@@ -116,7 +118,55 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
   });
 });
 
+describe('/schedules/:scheduleId/users/:userId/comments', () => {
+  beforeAll(() => {
+    passportStub.install(app);
+    passportStub.login({ id: 0, username: 'testuser' });
+  });
+
+  afterAll(() => {
+    passportStub.logout();
+    passportStub.uninstall(app);
+  });
+
+  test('コメントが更新できる', (done) => {
+    User.upsert({ userId: 0, username: 'testuser' }).then(() => {
+      request(app)
+        .post('/schedules')
+        .send({
+          scheduleName: 'テストコメント更新予定1',
+          memo: 'テストコメント更新メモ1',
+          candidates: 'テストコメント更新候補1'
+        })
+        .end((err, res) => {
+          const createdSchedulePath = res.headers.location;
+          const scheduleId = createdSchedulePath.split('/schedules/')[1];
+          // 更新がされることをテスト
+          const userId = 0;
+          request(app)
+            .post(`/schedules/${scheduleId}/users/${userId}/comments`)
+            .send({ comment: 'testcomment' })
+            .expect('{"status":"OK","comment":"testcomment"}')
+            .end((err, res) => {
+              Comment.findAll({
+                where: { scheduleId: scheduleId }
+              }).then((comments) => {
+                assert.strictEqual(comments.length, 1);
+                assert.strictEqual(comments[0].comment, 'testcomment');
+                deleteScheduleAggregate(scheduleId, done, err);
+              });
+            });
+        });
+    });
+  });
+});
+
+
 function deleteScheduleAggregate(scheduleId, done, err) {
+  const promiseCommentDestroy = Comment.findAll({
+    where: { scheduleId: scheduleId }
+  }).then((comments) => { comments.map((c) => { return c.destroy(); });});
+
   Availability.findAll({
     where: { scheduleId: scheduleId }
   }).then((availabilities) => {
