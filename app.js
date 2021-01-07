@@ -6,7 +6,6 @@ var logger = require('morgan');
 var helmet = require('helmet');
 var session = require('express-session');
 var passport = require('passport');
-
 // モデルの読み込み
 var User = require('./models/user');
 var Schedule = require('./models/schedule');
@@ -14,13 +13,13 @@ var Availability = require('./models/availability');
 var Candidate = require('./models/candidate');
 var Comment = require('./models/comment');
 User.sync().then(() => {
-  Schedule.belongsTo(User, {foreignKey: 'createdBy'});
+  Schedule.belongsTo(User, { foreignKey: 'createdBy' });
   Schedule.sync();
-  Comment.belongsTo(User, {foreignKey: 'userId'});
+  Comment.belongsTo(User, { foreignKey: 'userId' });
   Comment.sync();
-  Availability.belongsTo(User, {foreignKey: 'userId'});
+  Availability.belongsTo(User, { foreignKey: 'userId' });
   Candidate.sync().then(() => {
-    Availability.belongsTo(Candidate, {foreignKey: 'candidateId'});
+    Availability.belongsTo(Candidate, { foreignKey: 'candidateId' });
     Availability.sync();
   });
 });
@@ -42,8 +41,8 @@ passport.use(new GitHubStrategy({
   clientSecret: GITHUB_CLIENT_SECRET,
   callbackURL: process.env.HEROKU_URL ? process.env.HEROKU_URL + 'auth/github/callback' : 'http://localhost:8000/auth/github/callback'
 },
-  (accessToken, refreshToken, profile, done) => {
-    process.nextTick(() => {
+  function (accessToken, refreshToken, profile, done) {
+    process.nextTick(function () {
       User.upsert({
         userId: profile.id,
         username: profile.username
