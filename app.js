@@ -93,7 +93,6 @@ app.get('/auth/github',
 app.get('/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function (req, res) {
-    console.log('callback!')
     var loginFrom = req.cookies.loginFrom;
     // オープンリダイレクタ脆弱性対策
     if (loginFrom &&
@@ -104,7 +103,7 @@ app.get('/auth/github/callback',
     } else {
       res.redirect('/');
     }
-});
+  });
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -117,6 +116,7 @@ app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
+  console.log('エラー')
   // render the error page
   res.status(err.status || 500);
   res.render('error');
