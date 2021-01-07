@@ -88,11 +88,13 @@ app.use('/schedules', commentsRouter);
 app.get('/auth/github',
   passport.authenticate('github', { scope: ['user:email'] }),
   function (req, res) {
-});
+    consol.log('いまここ: /auth/github')
+  });
 
 app.get('/auth/github/callback',
   passport.authenticate('github', { failureRedirect: '/login' }),
   function (req, res) {
+    console.log('コールバック')
     var loginFrom = req.cookies.loginFrom;
     // オープンリダイレクタ脆弱性対策
     if (loginFrom &&
